@@ -25,5 +25,13 @@ PIPE_IMAGE_PATH: str = "assets/img/pipe/pipe.png"
 FLOOR_HEIGHT: int = 50
 FLOOR_IMAGE_PATH: str = "assets/img/floor/floor.png"
 
-SCORE_FONT: tuple[str, int] = ("assets/font/flappy-bird-font.ttf", 40)
+SCORE_FONT: tuple[str, int] = ("assets/font/flappy-bird-font/flappy-bird-font.ttf", 40)
 SCORE_COLOR: tuple[int, int, int] = BLACK
+
+MENU_FONT: tuple[str, int] = ("assets/font/flappybirdy/FlappyBirdy.ttf", 50)
+MENU_NUMBER_FONT: tuple[str, int] = ("assets/font/flappy-bird-font/flappy-bird-font.ttf", 30)
+MENU_IMAGE_PATH: str = "assets/img/menu/menu.png"
+MENU_WIDTH: int = 200
+MENU_HEIGHT: int = 300
+
+HIGHSCORE_FILE_PATH = "data/highscore.txt"

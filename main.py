@@ -5,8 +5,11 @@ from objects.bird import Bird
 from objects.pipe import Pipe
 from objects.floor import Floor
 from objects.score import Score
+from objects.menu import Menu
+from objects.button import Button
 from utils.animated import Animated
 from utils.movement import Movement
+from utils.file_helper import get_highscore, set_highscore
 
 
 def main():
@@ -21,9 +24,9 @@ def main():
                   constants.PLAYER_JUMP_HEIGHT, game_display, Animated(player_images, 60, 4))
 
     pipe_image = pygame.image.load(constants.PIPE_IMAGE_PATH)
-    pipe = Pipe(constants.PIPE_WIDTH, constants.PIPE_GAP_HEIGHT, game_display, pipe_image)
-    pipe2 = Pipe(constants.PIPE_WIDTH, constants.PIPE_GAP_HEIGHT, game_display, pipe_image)
-    pipe2.set_x(int((constants.DISPLAY_WIDTH * 1.5) + (constants.PIPE_WIDTH / 2)))
+    primary_pipes = Pipe(constants.PIPE_WIDTH, constants.PIPE_GAP_HEIGHT, game_display, pipe_image)
+    secondary_pipes = Pipe(constants.PIPE_WIDTH, constants.PIPE_GAP_HEIGHT, game_display, pipe_image)
+    secondary_pipes.set_x(int((constants.DISPLAY_WIDTH * 1.5) + (constants.PIPE_WIDTH / 2)))
 
     floor = Floor(constants.DISPLAY_HEIGHT - constants.FLOOR_HEIGHT, constants.FLOOR_HEIGHT, game_display,
                   pygame.image.load(constants.FLOOR_IMAGE_PATH))
@@ -35,10 +38,29 @@ def main():
     score = Score(constants.DISPLAY_WIDTH // 2, 20,
                   pygame.font.Font(*constants.SCORE_FONT), constants.SCORE_COLOR, game_display)
 
-    pipe.link_score(score)
-    pipe2.link_score(score)
+    menu = Menu(
+        constants.DISPLAY_WIDTH // 2 - constants.MENU_WIDTH // 2,
+        constants.DISPLAY_HEIGHT // 2 - constants.MENU_HEIGHT // 2,
+        constants.MENU_WIDTH, constants.MENU_HEIGHT, game_display, pygame.image.load(constants.MENU_IMAGE_PATH),
+        (get_highscore(), (constants.DISPLAY_WIDTH // 2 - 80, constants.DISPLAY_HEIGHT // 2 - 80),
+         pygame.font.Font(*constants.MENU_FONT), pygame.font.Font(*constants.MENU_NUMBER_FONT))
+    )
+    menu.add_button(
+        Button(constants.DISPLAY_WIDTH // 2 - 25, constants.DISPLAY_HEIGHT // 2 + 10, 50, 50, game_display,
+               pygame.image.load("assets/img/menu/play-button.png"),
+               lambda: menu.hide())
+    )
+    menu.add_button(
+        Button(constants.DISPLAY_WIDTH // 2 + 65, constants.DISPLAY_HEIGHT // 2 - 138, 18, 18, game_display,
+               pygame.image.load("assets/img/menu/quit-button.png"),
+               lambda: pygame.event.post(pygame.event.Event(pygame.QUIT)))
+    )
+
+    primary_pipes.link_score(score)
+    secondary_pipes.link_score(score)
 
     while running:
+        menu.hide()
         frame_advance = False
         while player.get_movement().get_delta_y() == 0 and running:
             # before player initially jumps
@@ -63,7 +85,7 @@ def main():
             clock.tick(60)
 
         crashed = False
-        crash_type = "floor" # default
+        crash_type = "floor"  # default, don't move after crash
         while not crashed and running:
             advance = not frame_advance
             for event in pygame.event.get():
@@ -88,7 +110,7 @@ def main():
                     player.crash()
                     crash_type = "floor"
 
-                if pipe.check_collision(player) or pipe2.check_collision(player):
+                if primary_pipes.check_collision(player) or secondary_pipes.check_collision(player):
                     crashed = True
                     player.crash()
                     player.set_movement(Movement(0, 0))
@@ -99,13 +121,20 @@ def main():
             pygame.display.update()
             clock.tick(60)
 
+        if menu.update_highscore(score.get_score()):
+            set_highscore(score.get_score())
+
+        menu.show()
         button_pressed = False
-        while not button_pressed and running:
+        while not menu.hidden and running and not button_pressed:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     button_pressed = True
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    button_pressed = True
+                    if menu.check_collision_position(*event.pos):
+                        for button in menu.buttons:
+                            if button.check_collision_position(*event.pos):
+                                button.on_click()
 
                 if event.type == pygame.QUIT:
                     running = False
@@ -121,7 +150,7 @@ def main():
             clock.tick(60)
 
         BaseObject.reset_all()
-        pipe2.set_x(int((constants.DISPLAY_WIDTH * 1.5) + (constants.PIPE_WIDTH / 2)))
+        secondary_pipes.set_x(int((constants.DISPLAY_WIDTH * 1.5) + (constants.PIPE_WIDTH / 2)))
 
 
 if __name__ == "__main__":

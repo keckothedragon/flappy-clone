@@ -8,8 +8,10 @@ class BaseObject:
 
     def __init__(self, x: int, y: int, width: int, height: int,
                  game_display: pygame.display, movement=Movement(0, 0),
-                 bounds: tuple[tuple[int, int], tuple[int, int]] = None):
-        self.__class__.child.append(self)
+                 bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+                 ignore_self: bool = False):
+        if not ignore_self:
+            self.__class__.child.append(self)
         self.x = x
         self.y = y
         self.start_x = x
@@ -61,12 +63,6 @@ class BaseObject:
             x_bounds, y_bounds = self.bounds
             self.x = np.clip(self.x, x_bounds[0], x_bounds[1] - self.width)
             self.y = np.clip(self.y, y_bounds[0], y_bounds[1] - self.height)
-            new_delta_x, new_delta_y = self.movement.get_delta()
-            # if self.x == x_bounds[0] or self.x == x_bounds[1]:
-            #     new_delta_x = 0
-            # if self.y == y_bounds[0] or self.y == y_bounds[1]:
-            #     new_delta_y = 0
-            # self.movement = Movement(new_delta_x, new_delta_y)
         self.draw()
 
     def check_collision(self, other: "BaseObject") -> bool:
@@ -79,6 +75,15 @@ class BaseObject:
         if self.y < other.y < self.y + self.height:
             collision_y = True
         elif self.y < other.y + other.height < self.y + self.height:
+            collision_y = True
+        return collision_x and collision_y
+
+    def check_collision_position(self, x: int, y: int) -> bool:
+        collision_x = False
+        collision_y = False
+        if self.x < x < self.x + self.width:
+            collision_x = True
+        if self.y < y < self.y + self.height:
             collision_y = True
         return collision_x and collision_y
 

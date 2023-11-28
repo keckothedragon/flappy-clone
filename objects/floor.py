@@ -4,7 +4,8 @@ import pygame
 
 
 class Floor(BaseObject):
-    def __init__(self, y: int, height: int, game_display: pygame.display, image: pygame.image, movement=Movement(-5, 0)):
+    def __init__(self, y: int, height: int, game_display: pygame.display, image: pygame.image,
+                 movement=Movement(-5, 0)):
         super().__init__(0, y, game_display.get_width(), height, game_display, movement)
         self.image = image
 
